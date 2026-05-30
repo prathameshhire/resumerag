@@ -1,0 +1,41 @@
+import uuid
+
+from pydantic import BaseModel, Field
+
+from app.schemas.search import SearchResult
+
+
+class OllamaTestRequest(BaseModel):
+    message: str = "Reply with: ResumeRAG Ollama test ok."
+
+
+class OllamaTestResponse(BaseModel):
+    model: str
+    response: str
+
+
+class TailorBulletsRequest(BaseModel):
+    job_description: str = Field(min_length=1)
+    target_role: str | None = None
+    company_name: str | None = None
+    bullet_count: int = Field(default=6, ge=1, le=8)
+    tone: str = "technical"
+    strict_mode: bool = True
+    top_k: int | None = Field(default=None, ge=1, le=12)
+
+
+class TailoredBullet(BaseModel):
+    bullet: str
+    matched_requirement: str
+    evidence_strength: str
+    source_chunk_ids: list[uuid.UUID]
+    notes: str | None = None
+
+
+class TailorBulletsResponse(BaseModel):
+    query_id: uuid.UUID
+    target_role: str | None
+    company_name: str | None
+    bullets: list[TailoredBullet]
+    retrieved_context: list[SearchResult]
+    warnings: list[str]

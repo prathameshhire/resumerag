@@ -1,29 +1,26 @@
 import { CheckCircle2, CircleDashed, RefreshCw, XCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { getHealth } from "../api/health";
+import { getFullHealth } from "../api/health";
+import type { ComponentHealth, FullHealthResponse } from "../types/health";
 
-type BackendState = "checking" | "ok" | "error";
-
-const placeholderChecks = [
-  { label: "Database", status: "Migration target" },
-  { label: "pgvector", status: "Extension baseline" },
-  { label: "Embedding model", status: "Later phase" },
-  { label: "Ollama", status: "Later phase" },
-];
+type HealthState = "checking" | "ready" | "error";
 
 export function HealthChecklist() {
-  const [backendState, setBackendState] = useState<BackendState>("checking");
+  const [healthState, setHealthState] = useState<HealthState>("checking");
+  const [health, setHealth] = useState<FullHealthResponse | null>(null);
 
   async function refresh(signal?: AbortSignal) {
-    setBackendState("checking");
+    setHealthState("checking");
 
     try {
-      const health = await getHealth(signal);
-      setBackendState(health.backend && health.status === "ok" ? "ok" : "error");
+      const fullHealth = await getFullHealth(signal);
+      setHealth(fullHealth);
+      setHealthState("ready");
     } catch {
       if (!signal?.aborted) {
-        setBackendState("error");
+        setHealth(null);
+        setHealthState("error");
       }
     }
   }
@@ -35,7 +32,7 @@ export function HealthChecklist() {
     return () => controller.abort();
   }, []);
 
-  const BackendIcon = backendState === "ok" ? CheckCircle2 : backendState === "error" ? XCircle : CircleDashed;
+  const checks = buildChecks(health);
 
   return (
     <aside className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
@@ -56,32 +53,97 @@ export function HealthChecklist() {
       </div>
 
       <div className="space-y-3">
-        <div className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
-          <div className="flex items-center gap-3">
-            <BackendIcon
-              aria-hidden="true"
-              className={
-                backendState === "ok" ? "text-emerald-600" : backendState === "error" ? "text-red-600" : "text-amber-600"
-              }
-              size={18}
-            />
-            <span className="text-sm font-medium text-zinc-900">Backend</span>
-          </div>
-          <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">
-            {backendState === "ok" ? "Connected" : backendState === "error" ? "Offline" : "Checking"}
-          </span>
-        </div>
+        {healthState === "error" ? (
+          <HealthRow label="Backend" status="Offline" state="error" />
+        ) : null}
 
-        {placeholderChecks.map((check) => (
-          <div key={check.label} className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
-            <div className="flex items-center gap-3">
-              <CircleDashed aria-hidden="true" className="text-sky-700" size={18} />
-              <span className="text-sm font-medium text-zinc-900">{check.label}</span>
-            </div>
-            <span className="text-xs font-medium uppercase tracking-wide text-zinc-500">{check.status}</span>
-          </div>
-        ))}
+        {healthState === "checking" ? (
+          ["Backend", "Database", "pgvector", "Embedding model", "Ollama"].map((label) => (
+            <HealthRow key={label} label={label} status="Checking" state="checking" />
+          ))
+        ) : null}
+
+        {healthState === "ready"
+          ? checks.map((check) => (
+              <HealthRow
+                key={check.label}
+                label={check.label}
+                status={check.status}
+                state={check.ok ? "ok" : "error"}
+                message={check.message}
+              />
+            ))
+          : null}
       </div>
     </aside>
   );
+}
+
+type HealthRowState = "checking" | "ok" | "error";
+
+type HealthRowProps = {
+  label: string;
+  status: string;
+  state: HealthRowState;
+  message?: string | null;
+};
+
+function HealthRow({ label, status, state, message }: HealthRowProps) {
+  const Icon = state === "ok" ? CheckCircle2 : state === "error" ? XCircle : CircleDashed;
+  const color = state === "ok" ? "text-emerald-600" : state === "error" ? "text-red-600" : "text-amber-600";
+
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-zinc-200 bg-zinc-50 px-4 py-3">
+      <div className="flex min-w-0 items-center gap-3">
+        <Icon aria-hidden="true" className={color} size={18} />
+        <span className="truncate text-sm font-medium text-zinc-900">{label}</span>
+      </div>
+      <span className="shrink-0 text-xs font-medium uppercase tracking-wide text-zinc-500" title={message ?? status}>
+        {status}
+      </span>
+    </div>
+  );
+}
+
+function buildChecks(health: FullHealthResponse | null) {
+  if (!health) {
+    return [];
+  }
+
+  return [
+    {
+      label: "Backend",
+      ok: health.backend.ok,
+      status: toStatus(health.backend, "Connected"),
+      message: health.backend.message,
+    },
+    {
+      label: "Database",
+      ok: health.database.ok,
+      status: toStatus(health.database, "Connected"),
+      message: health.database.message,
+    },
+    {
+      label: "pgvector",
+      ok: health.pgvector.ok,
+      status: toStatus(health.pgvector, "Ready"),
+      message: health.pgvector.message,
+    },
+    {
+      label: "Embedding model",
+      ok: health.embedding_model.ok,
+      status: health.embedding_model.ok ? `${health.embedding_model.dimension} dim` : "Unavailable",
+      message: health.embedding_model.message ?? health.embedding_model.model,
+    },
+    {
+      label: "Ollama",
+      ok: health.ollama.ok,
+      status: health.ollama.ok ? "Connected" : health.ollama.model_available ? "Error" : "Missing",
+      message: health.ollama.message ?? `${health.ollama.base_url} | ${health.ollama.model}`,
+    },
+  ];
+}
+
+function toStatus(component: ComponentHealth, okStatus: string) {
+  return component.ok ? okStatus : "Offline";
 }

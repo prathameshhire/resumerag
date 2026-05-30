@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     chunk_size_chars: int = 2200
     chunk_overlap_chars: int = 300
     retrieval_top_k: int = 8
+    max_prompt_context_chars: int = 12000
 
     ollama_base_url: str = "http://host.docker.internal:11434"
     ollama_model: str = "llama3.2"

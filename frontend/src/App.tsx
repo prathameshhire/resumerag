@@ -4,22 +4,24 @@ import { useState } from "react";
 import { DocumentList } from "./components/DocumentList";
 import { HealthChecklist } from "./components/HealthChecklist";
 import { Layout } from "./components/Layout";
+import { SearchPanel } from "./components/SearchPanel";
+import { TailorPanel } from "./components/TailorPanel";
 import { UploadPanel } from "./components/UploadPanel";
 
 const workflowItems = [
   {
     title: "Experience Library",
-    status: "Phase 2",
+    status: "Live",
     icon: FileText,
   },
   {
     title: "Vector Search",
-    status: "Phase 3",
+    status: "Live",
     icon: Search,
   },
   {
     title: "Tailored Bullets",
-    status: "Phase 5",
+    status: "Live",
     icon: Sparkles,
   },
 ];
@@ -29,7 +31,7 @@ function App() {
 
   return (
     <Layout>
-      <section className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
+      <section id="dashboard" className="grid scroll-mt-4 gap-5 lg:grid-cols-[1.15fr_0.85fr]">
         <div className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
           <div className="mb-5 flex items-center gap-3">
             <div className="flex h-11 w-11 items-center justify-center rounded-md bg-emerald-100 text-emerald-700">
@@ -63,10 +65,14 @@ function App() {
         <HealthChecklist />
       </section>
 
-      <section className="mt-5 grid gap-5 lg:grid-cols-[1fr_1fr]">
+      <section id="upload" className="mt-5 grid scroll-mt-4 gap-5 lg:grid-cols-[1fr_1fr]">
         <UploadPanel onUploaded={() => setDocumentsRefreshKey((key) => key + 1)} />
         <DocumentList refreshKey={documentsRefreshKey} />
       </section>
+
+      <TailorPanel documentsRefreshKey={documentsRefreshKey} />
+
+      <SearchPanel />
 
       <section className="mt-5 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
         <div className="mb-4 flex items-center gap-3">

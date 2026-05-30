@@ -1,0 +1,2 @@
+We are looking for a Data Engineer experienced with ETL pipelines, data quality, SQL, event-driven architectures, and backend services. Experience with streaming systems, Kafka, observability, and scalable data infrastructure is preferred.
+

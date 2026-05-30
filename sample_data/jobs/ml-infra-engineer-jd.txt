@@ -1,0 +1,2 @@
+We are hiring an ML Infrastructure Engineer to build local AI workflows, retrieval-augmented generation systems, embedding pipelines, model-serving integrations, and privacy-preserving developer tools. Experience with FastAPI, vector search, PostgreSQL, and local LLMs is helpful.
+

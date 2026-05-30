@@ -39,6 +39,7 @@ export function UploadPanel({ onUploaded }: UploadPanelProps) {
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    const form = event.currentTarget;
     setError(null);
     setResult(null);
 
@@ -61,7 +62,7 @@ export function UploadPanel({ onUploaded }: UploadPanelProps) {
       setFile(null);
       setTitle("");
       setDescription("");
-      event.currentTarget.reset();
+      form.reset();
       onUploaded();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Upload failed.");
@@ -160,6 +161,13 @@ export function UploadPanel({ onUploaded }: UploadPanelProps) {
       {result ? (
         <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
           Indexed {result.filename} with {result.chunks_created} chunks.
+        </div>
+      ) : null}
+
+      {isUploading ? (
+        <div className="mt-4 flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+          <Loader2 aria-hidden="true" className="animate-spin" size={16} />
+          Converting, chunking, embedding, and storing vectors
         </div>
       ) : null}
 

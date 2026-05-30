@@ -26,7 +26,10 @@ class MarkItDownService:
         try:
             result = MarkItDown().convert(str(file_path))
         except Exception as exc:
-            raise ConversionError("Document conversion failed.") from exc
+            detail = str(exc).strip()
+            if detail:
+                raise ConversionError(f"Document conversion failed: {detail}") from exc
+            raise ConversionError("Document conversion failed. The file may be scanned, encrypted, or unsupported.") from exc
 
         text_content = getattr(result, "text_content", None)
         if not isinstance(text_content, str):

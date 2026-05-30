@@ -11,6 +11,7 @@ from app.models.chunk import Chunk
 from app.models.document import Document
 from app.schemas.document import DocumentListItem, DocumentUploadResponse
 from app.services.chunking_service import ChunkingService
+from app.services.embedding_service import EmbeddingError, get_embedding_service
 from app.services.markitdown_service import ALLOWED_EXTENSIONS, ConversionError, MarkItDownService
 
 
@@ -26,6 +27,7 @@ class IngestionService:
         self.db = db
         self.settings = get_settings()
         self.converter = MarkItDownService()
+        self.embedding_service = get_embedding_service()
         self.chunker = ChunkingService(
             chunk_size_chars=self.settings.chunk_size_chars,
             chunk_overlap_chars=self.settings.chunk_overlap_chars,
@@ -64,6 +66,7 @@ class IngestionService:
             chunks = self.chunker.chunk_markdown(markdown_text)
             if not chunks:
                 raise IngestionError("No indexable chunks were created from the document.")
+            embeddings = self.embedding_service.embed_texts([chunk.chunk_text for chunk in chunks])
 
             document = Document(
                 filename=stored_filename,
@@ -88,6 +91,7 @@ class IngestionService:
                         section_title=chunk.section_title,
                         token_estimate=chunk.token_estimate,
                         metadata_=chunk.metadata,
+                        embedding=embeddings[index],
                     )
                 )
 
@@ -101,6 +105,10 @@ class IngestionService:
             self.db.rollback()
             file_path.unlink(missing_ok=True)
             raise IngestionError(str(exc)) from exc
+        except EmbeddingError as exc:
+            self.db.rollback()
+            file_path.unlink(missing_ok=True)
+            raise IngestionError(str(exc), status.HTTP_500_INTERNAL_SERVER_ERROR) from exc
         except Exception as exc:
             self.db.rollback()
             file_path.unlink(missing_ok=True)

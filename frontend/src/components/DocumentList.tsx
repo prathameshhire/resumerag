@@ -84,7 +84,7 @@ export function DocumentList({ refreshKey }: DocumentListProps) {
 
       {!isLoading && documents.length === 0 ? (
         <div className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-4 py-8 text-center text-sm text-zinc-600">
-          No experience documents indexed yet.
+          No experience documents indexed yet. Try a synthetic file from sample_data/experience.
         </div>
       ) : null}
 

@@ -1,7 +1,10 @@
 import { Database, FileText, Search, ShieldCheck, Sparkles } from "lucide-react";
+import { useState } from "react";
 
+import { DocumentList } from "./components/DocumentList";
 import { HealthChecklist } from "./components/HealthChecklist";
 import { Layout } from "./components/Layout";
+import { UploadPanel } from "./components/UploadPanel";
 
 const workflowItems = [
   {
@@ -22,6 +25,8 @@ const workflowItems = [
 ];
 
 function App() {
+  const [documentsRefreshKey, setDocumentsRefreshKey] = useState(0);
+
   return (
     <Layout>
       <section className="grid gap-5 lg:grid-cols-[1.15fr_0.85fr]">
@@ -56,6 +61,11 @@ function App() {
         </div>
 
         <HealthChecklist />
+      </section>
+
+      <section className="mt-5 grid gap-5 lg:grid-cols-[1fr_1fr]">
+        <UploadPanel onUploaded={() => setDocumentsRefreshKey((key) => key + 1)} />
+        <DocumentList refreshKey={documentsRefreshKey} />
       </section>
 
       <section className="mt-5 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">

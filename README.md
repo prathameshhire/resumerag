@@ -2,7 +2,7 @@
 
 ResumeRAG is a privacy-first local RAG application that generates tailored resume bullet points from your own work experience context. It runs locally with React, FastAPI, PostgreSQL/pgvector, sentence-transformers, MarkItDown, and Ollama.
 
-This repository is currently at Phase 1: the runnable local stack skeleton.
+This repository is currently at Phase 2: document upload, Markdown conversion, and chunk storage.
 
 ## Prerequisites
 
@@ -30,13 +30,25 @@ docker compose up --build
 - API docs: http://localhost:8000/docs
 - Health: http://localhost:8000/health
 
-## Phase 1 Includes
+## Current Features
 
 - Docker Compose services for frontend, backend, and PostgreSQL/pgvector
 - FastAPI app with `GET /health`
-- React/Vite dashboard shell
+- React/Vite dashboard shell with upload and indexed document panels
 - Alembic setup with initial pgvector schema migration
 - Baseline tables for documents, chunks, tailoring queries, and retrieval results
+- Document upload for `.pdf`, `.docx`, `.md`, and `.txt`
+- MarkItDown conversion to Markdown
+- Heading-aware Markdown chunking
+- Chunk persistence in PostgreSQL without embeddings yet
+
+## Document Endpoints
+
+- `POST /documents/upload`
+- `GET /documents`
+- `DELETE /documents/{document_id}`
+
+Phase 2 stores uploaded experience documents locally and indexes Markdown chunks. Embeddings, semantic search, Ollama health checks, and tailored bullet generation are later phases.
 
 ## Troubleshooting
 

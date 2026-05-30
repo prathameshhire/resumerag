@@ -39,6 +39,8 @@ services:
       - ./backend/app:/app/app
       - ./backend/migrations:/app/migrations
       - ./backend/alembic.ini:/app/alembic.ini
+      - ./backend/pytest.ini:/app/pytest.ini
+      - ./backend/tests:/app/tests
       - backend_uploads:/app/uploads
     depends_on:
       db:

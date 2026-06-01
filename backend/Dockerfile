@@ -5,6 +5,16 @@ ENV PYTHONUNBUFFERED=1
 
 WORKDIR /app
 
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        lmodern \
+        texlive-fonts-recommended \
+        texlive-latex-base \
+        texlive-latex-extra \
+        texlive-latex-recommended \
+        texlive-plain-generic \
+    && rm -rf /var/lib/apt/lists/*
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 

@@ -19,6 +19,9 @@ class SearchResult(BaseModel):
     chunk_id: uuid.UUID
     document_id: uuid.UUID
     source: str
+    source_type: str | None = None
+    category: str | None = None
+    document_title: str | None = None
     chunk_text: str
     section_title: str | None
     similarity_score: float

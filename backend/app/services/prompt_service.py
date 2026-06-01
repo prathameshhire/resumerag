@@ -16,7 +16,14 @@ Rules:
 6. Start bullets with strong action verbs.
 7. Include technical keywords from the job description only when supported by the user context.
 8. Keep each bullet to one line when possible.
-9. Return valid JSON only.
+9. The job description is not evidence and must not be cited.
+10. Do not mention cloud-native, microservices, distributed systems, AWS, on-call, high availability, fault tolerance, Helmet, or rate limiting unless those exact concepts appear in cited user context.
+11. For roles centered on C++, data storage, deduplication, replication, low-level systems, concurrency, or algorithms, generate bullets only when those exact areas are supported by cited user context.
+12. Do not stretch React, API, dashboard, or general full-stack evidence to satisfy systems/storage/C++ requirements.
+13. Do not copy an existing resume bullet verbatim. Rewrite only when the rewrite is more targeted and still fully supported.
+14. For technical skill suggestions, include only individual skills that are explicitly named in the job description; these are JD-only suggestions for user review and do not need cited context.
+15. Skill categories must be one of: Languages, Frameworks & Libraries, Databases, AI/ML, Tools.
+16. Return valid JSON only.
 """
 
 
@@ -38,13 +45,19 @@ Tone:
 Strict mode:
 {request.strict_mode}
 
-Job description:
+Job description for targeting only. This text is not evidence:
 {request.job_description.strip()}
 
-User experience context:
+Only this user experience context is citable evidence:
 {context_text}
 
 Generate {request.bullet_count} tailored resume bullets.
+Also identify up to 8 resume Technical Skills entries from the job description.
+Each skill suggestion must be explicitly named in the job description. It does not need to appear in the retrieved user context.
+Do not suggest broad phrases like scalable systems, collaboration, performance, ownership, or problem solving as skills.
+If a bullet cannot be grounded in at least one source number, omit it and add a warning.
+If the retrieved context is only transferable but does not directly support the role-critical requirements, return an empty bullets list and explain the evidence gap in warnings.
+If a source already contains a polished resume bullet, do not return the same sentence unchanged.
 
 Return JSON with this exact structure:
 {{
@@ -52,9 +65,20 @@ Return JSON with this exact structure:
     {{
       "bullet": "...",
       "matched_requirement": "...",
-      "evidence_strength": "high|medium|low",
+      "evidence_strength": "high|medium",
       "source_numbers": [1, 2],
+      "evidence_quotes": ["short exact copied phrase from a cited source"],
       "notes": "..."
+    }}
+  ],
+  "skill_suggestions": [
+    {{
+      "skill": "React",
+      "category": "Frameworks & Libraries",
+      "matched_requirement": "Experience with React",
+      "evidence_strength": "jd",
+      "source_numbers": [],
+      "notes": "Explicitly mentioned in the job description; review before adding."
     }}
   ],
   "warnings": ["..."]

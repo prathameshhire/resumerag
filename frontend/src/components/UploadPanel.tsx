@@ -72,22 +72,23 @@ export function UploadPanel({ onUploaded }: UploadPanelProps) {
   }
 
   return (
-    <section className="rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-sky-100 text-sky-700">
+    <section className="section-shell section-padding">
+      <div className="mb-5 section-heading">
+        <div className="icon-tile border-sky-200 bg-sky-50 text-sky-700">
           <FileUp aria-hidden="true" size={21} />
         </div>
         <div>
+          <p className="eyebrow">Evidence intake</p>
           <h2 className="text-lg font-semibold text-zinc-950">Upload Experience</h2>
           <p className="mt-1 text-sm text-zinc-600">Index local documents as Markdown chunks</p>
         </div>
       </div>
 
       <form className="grid gap-4" onSubmit={handleSubmit}>
-        <label className="grid gap-2 text-sm font-medium text-zinc-800">
+        <label className="field-label">
           File
           <input
-            className="block w-full rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 file:mr-3 file:rounded-md file:border-0 file:bg-zinc-900 file:px-3 file:py-2 file:text-sm file:font-medium file:text-white"
+            className="block w-full min-w-0 rounded-md border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900 outline-none transition file:mr-3 file:rounded-md file:border-0 file:bg-zinc-950 file:px-3 file:py-2 file:text-sm file:font-semibold file:text-white focus:border-zinc-900 focus:ring-2 focus:ring-zinc-900/10"
             type="file"
             accept=".pdf,.docx,.md,.txt"
             onChange={(event) => setFile(event.currentTarget.files?.[0] ?? null)}
@@ -95,10 +96,10 @@ export function UploadPanel({ onUploaded }: UploadPanelProps) {
         </label>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm font-medium text-zinc-800">
+          <label className="field-label">
             Source Type
             <select
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+              className="field-control"
               value={sourceType}
               onChange={(event) => setSourceType(event.target.value)}
             >
@@ -110,10 +111,10 @@ export function UploadPanel({ onUploaded }: UploadPanelProps) {
             </select>
           </label>
 
-          <label className="grid gap-2 text-sm font-medium text-zinc-800">
+          <label className="field-label">
             Category
             <select
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+              className="field-control"
               value={category}
               onChange={(event) => setCategory(event.target.value)}
             >
@@ -127,20 +128,20 @@ export function UploadPanel({ onUploaded }: UploadPanelProps) {
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="grid gap-2 text-sm font-medium text-zinc-800">
+          <label className="field-label">
             Title
             <input
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+              className="field-control"
               placeholder="Optional"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
             />
           </label>
 
-          <label className="grid gap-2 text-sm font-medium text-zinc-800">
+          <label className="field-label">
             Description
             <input
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+              className="field-control"
               placeholder="Optional"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
@@ -150,7 +151,7 @@ export function UploadPanel({ onUploaded }: UploadPanelProps) {
 
         <button
           type="submit"
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-900 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
+          className="primary-button"
           disabled={isUploading}
         >
           {isUploading ? <Loader2 aria-hidden="true" className="animate-spin" size={16} /> : <FileUp aria-hidden="true" size={16} />}
@@ -159,19 +160,19 @@ export function UploadPanel({ onUploaded }: UploadPanelProps) {
       </form>
 
       {result ? (
-        <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        <div className="status-note mt-4 border-emerald-200 bg-emerald-50 text-emerald-900">
           Indexed {result.filename} with {result.chunks_created} chunks.
         </div>
       ) : null}
 
       {isUploading ? (
-        <div className="mt-4 flex items-center gap-2 rounded-lg border border-sky-200 bg-sky-50 px-4 py-3 text-sm text-sky-900">
+        <div className="status-note mt-4 flex items-center gap-2 border-sky-200 bg-sky-50 text-sky-900">
           <Loader2 aria-hidden="true" className="animate-spin" size={16} />
           Converting, chunking, embedding, and storing vectors
         </div>
       ) : null}
 
-      {error ? <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">{error}</div> : null}
+      {error ? <div className="status-note mt-4 border-red-200 bg-red-50 text-red-900">{error}</div> : null}
     </section>
   );
 }

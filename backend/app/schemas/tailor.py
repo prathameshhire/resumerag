@@ -24,12 +24,35 @@ class TailorBulletsRequest(BaseModel):
     top_k: int | None = Field(default=None, ge=1, le=12)
 
 
+class ResumePlacement(BaseModel):
+    section: str
+    entry: str
+    rationale: str
+
+
 class TailoredBullet(BaseModel):
     bullet: str
     matched_requirement: str
     evidence_strength: str
     source_chunk_ids: list[uuid.UUID]
+    placement: ResumePlacement
     notes: str | None = None
+
+
+class TailoredSkill(BaseModel):
+    skill: str
+    category: str
+    matched_requirement: str
+    evidence_strength: str
+    source_chunk_ids: list[uuid.UUID]
+    notes: str | None = None
+
+
+class RejectedBullet(BaseModel):
+    bullet: str
+    matched_requirement: str
+    source_chunk_ids: list[uuid.UUID]
+    reasons: list[str]
 
 
 class TailorBulletsResponse(BaseModel):
@@ -37,5 +60,7 @@ class TailorBulletsResponse(BaseModel):
     target_role: str | None
     company_name: str | None
     bullets: list[TailoredBullet]
+    skill_suggestions: list[TailoredSkill] = []
+    rejected_bullets: list[RejectedBullet] = []
     retrieved_context: list[SearchResult]
     warnings: list[str]

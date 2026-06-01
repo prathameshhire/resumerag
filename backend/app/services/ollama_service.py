@@ -42,12 +42,16 @@ class OllamaService:
 
         return any(model == requested or model == f"{requested}:latest" for model in models)
 
-    def chat(self, messages: list[dict[str, str]]) -> str:
+    def chat(self, messages: list[dict[str, str]], *, json_format: bool = False, options: dict[str, Any] | None = None) -> str:
         body: dict[str, Any] = {
             "model": self.model_name,
             "messages": messages,
             "stream": False,
         }
+        if json_format:
+            body["format"] = "json"
+        if options:
+            body["options"] = options
 
         try:
             response = httpx.post(f"{self.base_url}/api/chat", json=body, timeout=self.timeout_seconds)

@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Clipboard, FileText, Loader2, Sparkles } from "lucide-react";
+import { AlertTriangle, ArrowRight, CheckCircle2, Clipboard, FileCode2, FileText, Loader2, MapPin, Sparkles } from "lucide-react";
 import { FormEvent, useEffect, useMemo, useState } from "react";
 
 import { getDocuments } from "../api/documents";
@@ -14,15 +14,16 @@ const toneOptions = [
 
 type TailorPanelProps = {
   documentsRefreshKey: number;
+  onGenerated?: (response: TailorBulletsResponse) => void;
 };
 
-export function TailorPanel({ documentsRefreshKey }: TailorPanelProps) {
+export function TailorPanel({ documentsRefreshKey, onGenerated }: TailorPanelProps) {
   const [targetRole, setTargetRole] = useState("");
   const [companyName, setCompanyName] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [bulletCount, setBulletCount] = useState(6);
   const [tone, setTone] = useState("technical");
-  const [strictMode, setStrictMode] = useState(true);
+  const [strictMode, setStrictMode] = useState(false);
   const [topK, setTopK] = useState(8);
   const [response, setResponse] = useState<TailorBulletsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -81,6 +82,7 @@ export function TailorPanel({ documentsRefreshKey }: TailorPanelProps) {
         top_k: topK,
       });
       setResponse(result);
+      onGenerated?.(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Tailoring failed.");
     } finally {
@@ -99,35 +101,67 @@ export function TailorPanel({ documentsRefreshKey }: TailorPanelProps) {
   }
 
   const allBulletsText = response?.bullets.map((bullet) => `- ${bullet.bullet}`).join("\n") ?? "";
+  const hasGeneratedBullets = (response?.bullets.length ?? 0) > 0;
+  const hasGeneratedSuggestions = hasGeneratedBullets || (response?.skill_suggestions.length ?? 0) > 0;
 
   return (
-    <section id="tailor" className="mt-5 scroll-mt-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-emerald-100 text-emerald-700">
+    <section id="tailor" className="section-shell section-padding mt-5">
+      {hasGeneratedSuggestions ? (
+        <a
+          aria-label="Open LaTeX resume editor"
+          className="fixed right-6 top-1/2 z-30 hidden -translate-y-1/2 items-center gap-3 rounded-lg border border-zinc-300 bg-white px-4 py-3 text-sm font-semibold text-zinc-950 shadow-xl shadow-zinc-300/50 transition hover:-translate-y-[calc(50%+2px)] hover:border-zinc-950 hover:bg-zinc-50 xl:flex"
+          href="#/latex"
+        >
+          <span className="flex h-9 w-9 items-center justify-center rounded-md bg-zinc-950 text-white">
+            <FileCode2 aria-hidden="true" size={17} />
+          </span>
+          <span className="grid text-left leading-tight">
+            <span>Review in LaTeX</span>
+            <span className="text-xs font-medium text-zinc-500">
+              {response?.bullets.length ?? 0} bullets / {response?.skill_suggestions.length ?? 0} skills
+            </span>
+          </span>
+          <ArrowRight aria-hidden="true" size={16} />
+        </a>
+      ) : null}
+
+      <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+        <div className="section-heading">
+          <div className="icon-tile border-emerald-200 bg-emerald-50 text-emerald-700">
           <Sparkles aria-hidden="true" size={21} />
         </div>
         <div>
+            <p className="eyebrow">Generation</p>
           <h2 className="text-lg font-semibold text-zinc-950">Tailored Bullets</h2>
           <p className="mt-1 text-sm text-zinc-600">Generate grounded resume bullets with source evidence</p>
+        </div>
+      </div>
+        <div className="flex flex-wrap gap-2">
+          <span className="rounded-md border border-zinc-200 bg-zinc-50 px-3 py-2 text-xs font-semibold text-zinc-700">
+            {documentCount} indexed docs
+          </span>
+          <span className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-semibold text-emerald-800">
+            {strictMode ? "Strict gate" : "Draft mode"}
+          </span>
         </div>
       </div>
 
       <form className="grid gap-4" onSubmit={handleSubmit}>
         <div className="grid gap-4 md:grid-cols-2">
-          <label className="grid gap-2 text-sm font-medium text-zinc-800">
+          <label className="field-label">
             Target Role
             <input
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+              className="field-control"
               placeholder="Backend Engineer"
               value={targetRole}
               onChange={(event) => setTargetRole(event.target.value)}
             />
           </label>
 
-          <label className="grid gap-2 text-sm font-medium text-zinc-800">
+          <label className="field-label">
             Company
             <input
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+              className="field-control"
               placeholder="Optional"
               value={companyName}
               onChange={(event) => setCompanyName(event.target.value)}
@@ -135,10 +169,10 @@ export function TailorPanel({ documentsRefreshKey }: TailorPanelProps) {
           </label>
         </div>
 
-        <label className="grid gap-2 text-sm font-medium text-zinc-800">
+        <label className="field-label">
           Job Description
           <textarea
-            className="min-h-48 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm leading-6 text-zinc-900"
+            className="field-control min-h-52 resize-y leading-6"
             placeholder="Paste the job description here"
             value={jobDescription}
             onChange={(event) => setJobDescription(event.target.value)}
@@ -146,10 +180,10 @@ export function TailorPanel({ documentsRefreshKey }: TailorPanelProps) {
         </label>
 
         <div className="grid gap-4 md:grid-cols-[120px_1fr_120px_auto]">
-          <label className="grid gap-2 text-sm font-medium text-zinc-800">
+          <label className="field-label">
             Bullets
             <input
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+              className="field-control"
               min={1}
               max={8}
               type="number"
@@ -158,10 +192,10 @@ export function TailorPanel({ documentsRefreshKey }: TailorPanelProps) {
             />
           </label>
 
-          <label className="grid gap-2 text-sm font-medium text-zinc-800">
+          <label className="field-label">
             Tone
             <select
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+              className="field-control"
               value={tone}
               onChange={(event) => setTone(event.target.value)}
             >
@@ -173,10 +207,10 @@ export function TailorPanel({ documentsRefreshKey }: TailorPanelProps) {
             </select>
           </label>
 
-          <label className="grid gap-2 text-sm font-medium text-zinc-800">
+          <label className="field-label">
             Top K
             <input
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+              className="field-control"
               min={1}
               max={12}
               type="number"
@@ -185,7 +219,7 @@ export function TailorPanel({ documentsRefreshKey }: TailorPanelProps) {
             />
           </label>
 
-          <label className="flex items-end gap-2 pb-2 text-sm font-medium text-zinc-800">
+          <label className="flex items-end gap-2 pb-2 text-sm font-semibold text-zinc-800">
             <input
               checked={strictMode}
               className="h-4 w-4 rounded border-zinc-300 text-zinc-900"
@@ -198,7 +232,7 @@ export function TailorPanel({ documentsRefreshKey }: TailorPanelProps) {
 
         <button
           type="submit"
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-900 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
+          className={isGenerating ? "primary-button skeuo-loading-button" : "primary-button"}
           disabled={isGenerating || isCheckingDocuments || documentCount === 0}
         >
           {isGenerating ? <Loader2 aria-hidden="true" className="animate-spin" size={16} /> : <Sparkles aria-hidden="true" size={16} />}
@@ -207,53 +241,45 @@ export function TailorPanel({ documentsRefreshKey }: TailorPanelProps) {
       </form>
 
       {!isCheckingDocuments && documentCount === 0 ? (
-        <div className="mt-4 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-4 py-6 text-center text-sm text-zinc-600">
+        <div className="empty-state mt-4">
           Upload indexed experience documents before tailoring bullets.
         </div>
       ) : null}
 
       {isGenerating ? (
-        <div className="mt-4 flex items-center gap-2 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-900">
+        <div className="status-note skeuo-progress-note mt-4 flex items-center gap-3 border-emerald-200 bg-emerald-50 text-emerald-900">
           <Loader2 aria-hidden="true" className="animate-spin" size={16} />
-          Retrieving evidence and waiting for the local model
+          <span>Retrieving evidence and waiting for the local model</span>
         </div>
       ) : null}
 
-      {error ? <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">{error}</div> : null}
+      {error ? <div className="status-note mt-4 border-red-200 bg-red-50 text-red-900">{error}</div> : null}
 
       {response ? (
         <div className="mt-6 grid gap-5 xl:grid-cols-[1.05fr_0.95fr]">
           <div>
             <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-500">Generated Bullets</h3>
-              {response.bullets.length > 0 ? (
-                <button
-                  type="button"
-                  className="inline-flex h-9 items-center gap-2 rounded-md border border-zinc-300 bg-white px-3 text-sm font-medium text-zinc-800 transition hover:bg-zinc-50"
-                  onClick={() => copyText(allBulletsText, "all")}
-                >
-                  <Clipboard aria-hidden="true" size={15} />
-                  {copied === "all" ? "Copied" : "Copy All"}
-                </button>
+              {hasGeneratedBullets ? (
+                <div className="flex flex-wrap gap-2">
+                  <a className="secondary-button xl:hidden" href="#/latex">
+                    <FileCode2 aria-hidden="true" size={15} />
+                    Open LaTeX Editor
+                  </a>
+                  <button
+                    type="button"
+                    className="secondary-button"
+                    onClick={() => copyText(allBulletsText, "all")}
+                  >
+                    <Clipboard aria-hidden="true" size={15} />
+                    {copied === "all" ? "Copied" : "Copy All"}
+                  </button>
+                </div>
               ) : null}
             </div>
 
-            {response.warnings.length > 0 ? (
-              <div className="mb-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-                <div className="mb-1 flex items-center gap-2 font-semibold">
-                  <AlertTriangle aria-hidden="true" size={16} />
-                  Warnings
-                </div>
-                <ul className="list-disc space-y-1 pl-5">
-                  {response.warnings.map((warning) => (
-                    <li key={warning}>{warning}</li>
-                  ))}
-                </ul>
-              </div>
-            ) : null}
-
             {response.bullets.length === 0 ? (
-              <div className="rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-4 py-8 text-center text-sm text-zinc-600">
+              <div className="empty-state">
                 Not enough evidence for grounded bullets.
               </div>
             ) : (
@@ -270,13 +296,43 @@ export function TailorPanel({ documentsRefreshKey }: TailorPanelProps) {
                 ))}
               </div>
             )}
+
+            {response.skill_suggestions.length > 0 ? (
+              <div className="mt-4 rounded-lg border border-emerald-200 bg-emerald-50/70 p-4">
+                <div className="mb-3 text-sm font-semibold text-emerald-950">JD-mentioned skills for LaTeX</div>
+                <div className="flex flex-wrap gap-2">
+                  {response.skill_suggestions.map((skill) => (
+                    <span key={`${skill.category}-${skill.skill}`} className="rounded-md border border-emerald-200 bg-white px-2 py-1 text-xs font-semibold text-emerald-900">
+                      {skill.category}: {skill.skill}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {response.rejected_bullets.length > 0 ? (
+              <div className="status-note mt-4 border-red-200 bg-red-50">
+                <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-red-900">
+                  <AlertTriangle aria-hidden="true" size={16} />
+                  Rejected by validator
+                </div>
+                <div className="space-y-3">
+                  {response.rejected_bullets.map((rejected, index) => (
+                    <div key={`${rejected.bullet}-${index}`} className="text-sm text-red-950">
+                      <p className="font-medium">{rejected.bullet}</p>
+                      <p className="mt-1 text-xs leading-5 text-red-800">{rejected.reasons.join(" ")}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
           </div>
 
           <div>
             <h3 className="mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-500">Retrieved Evidence</h3>
             <div className="space-y-3">
               {response.retrieved_context.map((result) => (
-                <article key={result.chunk_id} className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+                <article key={result.chunk_id} className="subtle-card p-4">
                   <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                     <div className="min-w-0">
                       <h4 className="truncate text-sm font-semibold text-zinc-950">
@@ -309,17 +365,17 @@ type BulletCardProps = {
 
 function BulletCard({ bullet, copied, evidence, index, onCopy }: BulletCardProps) {
   return (
-    <article className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+    <article className="rounded-lg border border-zinc-200 bg-white p-4 shadow-sm shadow-zinc-200/70">
       <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div className="flex items-center gap-2">
-          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-white text-xs font-semibold text-zinc-700">
+          <span className="flex h-7 w-7 items-center justify-center rounded-md bg-zinc-950 text-xs font-semibold text-white">
             {index + 1}
           </span>
           <EvidenceBadge strength={bullet.evidence_strength} />
         </div>
         <button
           type="button"
-          className="inline-flex h-8 items-center gap-2 rounded-md border border-zinc-300 bg-white px-2 text-xs font-medium text-zinc-800 transition hover:bg-zinc-50"
+          className="inline-flex h-8 items-center gap-2 rounded-md border border-zinc-300 bg-white px-2 text-xs font-semibold text-zinc-800 transition hover:bg-zinc-50"
           onClick={onCopy}
         >
           {copied ? <CheckCircle2 aria-hidden="true" size={14} /> : <Clipboard aria-hidden="true" size={14} />}
@@ -327,9 +383,19 @@ function BulletCard({ bullet, copied, evidence, index, onCopy }: BulletCardProps
         </button>
       </div>
 
-      <p className="text-sm leading-6 text-zinc-950">{bullet.bullet}</p>
+      <p className="text-sm font-medium leading-6 text-zinc-950">{bullet.bullet}</p>
 
       <div className="mt-4 grid gap-2 text-xs text-zinc-600">
+        <div className="rounded-md border border-violet-200 bg-violet-50 px-3 py-2 text-violet-950">
+          <div className="mb-1 flex items-center gap-2 font-semibold text-violet-900">
+            <MapPin aria-hidden="true" size={13} />
+            Place in resume
+          </div>
+          <div>
+            <span className="font-semibold">{bullet.placement.section}</span> -&gt; {bullet.placement.entry}
+          </div>
+          <div className="mt-1 text-violet-800">{bullet.placement.rationale}</div>
+        </div>
         <div>
           <span className="font-semibold text-zinc-800">Requirement:</span> {bullet.matched_requirement}
         </div>

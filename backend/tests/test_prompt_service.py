@@ -24,3 +24,6 @@ def test_prompt_service_formats_source_numbers() -> None:
     assert messages[0]["role"] == "system"
     assert "[Source 1]" in messages[1]["content"]
     assert "backend-projects.md" in messages[1]["content"]
+    assert "skill_suggestions" in messages[1]["content"]
+    assert "explicitly named in the job description" in messages[1]["content"]
+    assert "does not need to appear in the retrieved user context" in messages[1]["content"]

@@ -47,6 +47,7 @@ Open:
 4. Paste a job description from `sample_data/jobs`.
 5. Generate tailored bullets.
 6. Review each bullet with its matched requirement and retrieved source evidence.
+7. Paste your resume `.tex` file into the LaTeX workspace, apply or reject suggested bullet patches, then export either `.tex` or a compiled PDF.
 
 Suggested first demo:
 
@@ -78,6 +79,7 @@ curl.exe -X POST http://localhost:8000/documents/upload `
 - Semantic chunk search
 - Ollama model availability checks
 - Tailored bullet generation with retrieved source evidence
+- LaTeX resume workspace with patch review and PDF export through `pdflatex`
 - Synthetic sample experience and job descriptions
 
 ## API Endpoints
@@ -96,6 +98,10 @@ Tailoring:
 
 - `POST /tailor/test-ollama`
 - `POST /tailor/bullets`
+
+LaTeX:
+
+- `POST /latex/pdf`
 
 Health:
 
@@ -171,6 +177,14 @@ extra_hosts:
 - Close other heavy apps.
 - Expect the first embedding request to take longer while the model loads.
 
+### PDF export fails
+
+PDF export uses `pdflatex` inside the backend container. If the UI says `pdflatex` is missing, rebuild the backend image:
+
+```bash
+docker compose up -d --build backend
+```
+
 ### Docker memory looks high on Windows
 
 Docker Desktop runs Linux containers through WSL. Task Manager often shows that memory under `Vmmem`. Memory can drop after containers settle, and `docker compose down` stops this app while preserving the named database volume.
@@ -187,4 +201,3 @@ docker compose up --build
 ## Privacy Note
 
 ResumeRAG is intended as a local development app for personal career data. It is not hardened for public multi-user deployment. Documents, job descriptions, embeddings, and Ollama calls stay local for the MVP.
-

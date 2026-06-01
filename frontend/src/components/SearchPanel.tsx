@@ -67,22 +67,23 @@ export function SearchPanel() {
   }
 
   return (
-    <section id="search" className="mt-5 scroll-mt-4 rounded-lg border border-zinc-200 bg-white p-6 shadow-sm">
-      <div className="mb-5 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-md bg-indigo-100 text-indigo-700">
+    <section id="search" className="section-shell section-padding mt-5">
+      <div className="mb-5 section-heading">
+        <div className="icon-tile border-indigo-200 bg-indigo-50 text-indigo-700">
           <Search aria-hidden="true" size={21} />
         </div>
         <div>
+          <p className="eyebrow">Retrieval lab</p>
           <h2 className="text-lg font-semibold text-zinc-950">Search Experience Context</h2>
           <p className="mt-1 text-sm text-zinc-600">Retrieve embedded chunks from uploaded documents</p>
         </div>
       </div>
 
       <form className="grid gap-4" onSubmit={handleSubmit}>
-        <label className="grid gap-2 text-sm font-medium text-zinc-800">
+        <label className="field-label">
           Query
           <input
-            className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+            className="field-control"
             placeholder="FastAPI PostgreSQL authentication"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
@@ -90,10 +91,10 @@ export function SearchPanel() {
         </label>
 
         <div className="grid gap-4 md:grid-cols-[1fr_1fr_120px]">
-          <label className="grid gap-2 text-sm font-medium text-zinc-800">
+          <label className="field-label">
             Source Type
             <select
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+              className="field-control"
               value={sourceType}
               onChange={(event) => setSourceType(event.target.value)}
             >
@@ -105,10 +106,10 @@ export function SearchPanel() {
             </select>
           </label>
 
-          <label className="grid gap-2 text-sm font-medium text-zinc-800">
+          <label className="field-label">
             Category
             <select
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+              className="field-control"
               value={category}
               onChange={(event) => setCategory(event.target.value)}
             >
@@ -120,10 +121,10 @@ export function SearchPanel() {
             </select>
           </label>
 
-          <label className="grid gap-2 text-sm font-medium text-zinc-800">
+          <label className="field-label">
             Top K
             <input
-              className="rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-900"
+              className="field-control"
               min={1}
               max={20}
               type="number"
@@ -135,7 +136,7 @@ export function SearchPanel() {
 
         <button
           type="submit"
-          className="inline-flex h-10 items-center justify-center gap-2 rounded-md bg-zinc-900 px-4 text-sm font-semibold text-white transition hover:bg-zinc-800 disabled:cursor-not-allowed disabled:bg-zinc-400"
+          className="primary-button"
           disabled={isSearching}
         >
           {isSearching ? <Loader2 aria-hidden="true" className="animate-spin" size={16} /> : <Search aria-hidden="true" size={16} />}
@@ -143,17 +144,17 @@ export function SearchPanel() {
         </button>
       </form>
 
-      {error ? <div className="mt-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900">{error}</div> : null}
+      {error ? <div className="status-note mt-4 border-red-200 bg-red-50 text-red-900">{error}</div> : null}
 
       {isSearching ? (
-        <div className="mt-4 flex items-center gap-2 rounded-lg border border-indigo-200 bg-indigo-50 px-4 py-3 text-sm text-indigo-900">
+        <div className="status-note mt-4 flex items-center gap-2 border-indigo-200 bg-indigo-50 text-indigo-900">
           <Loader2 aria-hidden="true" className="animate-spin" size={16} />
           Embedding query and searching stored chunks
         </div>
       ) : null}
 
       {!error && hasSearched && !isSearching && results.length === 0 ? (
-        <div className="mt-4 rounded-lg border border-dashed border-zinc-300 bg-zinc-50 px-4 py-8 text-center text-sm text-zinc-600">
+        <div className="empty-state mt-4">
           No matching chunks found.
         </div>
       ) : null}
@@ -161,7 +162,7 @@ export function SearchPanel() {
       {results.length > 0 ? (
         <div className="mt-5 space-y-3">
           {results.map((result) => (
-            <article key={result.chunk_id} className="rounded-lg border border-zinc-200 bg-zinc-50 p-4">
+            <article key={result.chunk_id} className="subtle-card p-4 transition hover:border-zinc-300 hover:bg-white">
               <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <h3 className="text-sm font-semibold text-zinc-950">

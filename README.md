@@ -110,12 +110,9 @@ Health:
 
 ## Screenshots
 
-Screenshot placeholders for the README:
+### Dashboard
 
-- Dashboard and health checklist
-- Upload and indexed documents
-- Tailored bullets with evidence
-- Semantic search results
+![ResumeRAG dashboard with local health checks](docs/screenshots/dashboard.png)
 
 ## Development
 

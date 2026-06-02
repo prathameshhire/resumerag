@@ -110,9 +110,25 @@ Health:
 
 ## Screenshots
 
-### Dashboard
+### Dashboard / Status
 
 ![ResumeRAG dashboard with local health checks](docs/screenshots/dashboard.png)
+
+### Upload
+
+![ResumeRAG upload page for indexing local evidence documents](docs/screenshots/upload.png)
+
+### Tailor
+
+![ResumeRAG tailor page for generating evidence-backed bullets](docs/screenshots/tailor.png)
+
+### LaTeX Editor
+
+![ResumeRAG LaTeX resume editor with patch review workspace](docs/screenshots/latex.png)
+
+### Search
+
+![ResumeRAG semantic search page for inspecting retrieved context](docs/screenshots/search.png)
 
 ## Development
 

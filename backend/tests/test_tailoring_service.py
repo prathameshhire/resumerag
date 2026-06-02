@@ -123,7 +123,9 @@ def test_extract_jd_skill_suggestions_is_deterministic_fallback() -> None:
     service = TailoringService.__new__(TailoringService)
     jd = (
         "Experience with Python/Golang/Java/C++, containers/Docker, cloud infrastructure like AWS/GCP/Azure, "
-        "Kafka, Elasticsearch, OpenSearch, Istio, Vector DB, React, Next.js, Tailwind CSS, and PostgreSQL."
+        "Kafka, Elasticsearch, OpenSearch, Istio, Vector DB, React, Next.js, Tailwind CSS, PostgreSQL, "
+        "SCIM, LDAP, Active Directory, SAML, SSO, OAuth2, OpenID Connect, XML, SOAP, JSON, REST, "
+        "RBAC, ABAC, ReBAC, Terraform, AWS CloudFormation, and Kubernetes."
     )
 
     skills = service._extract_jd_skill_suggestions(jd)
@@ -139,4 +141,12 @@ def test_extract_jd_skill_suggestions_is_deterministic_fallback() -> None:
     assert "Elasticsearch" in skill_names
     assert "Vector DB" in skill_names
     assert "React" in skill_names
+    assert "SCIM" in skill_names
+    assert "OAuth2" in skill_names
+    assert "OpenID Connect" in skill_names
+    assert "REST" in skill_names
+    assert "RBAC" in skill_names
+    assert "Terraform" in skill_names
+    assert "AWS CloudFormation" in skill_names
+    assert "Kubernetes" in skill_names
     assert all(skill.source_chunk_ids == [] for skill in skills)

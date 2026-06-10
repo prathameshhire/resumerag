@@ -2,7 +2,7 @@ import shutil
 
 from fastapi.testclient import TestClient
 
-from app.api import latex as latex_api
+from app.api.latex import get_latex_service
 from app.main import app
 from app.services.latex_service import LatexExportError, LatexService
 
@@ -32,9 +32,20 @@ def test_compile_pdf_reports_missing_compiler(monkeypatch) -> None:
 
 
 def test_export_pdf_endpoint_returns_pdf(monkeypatch) -> None:
-    monkeypatch.setattr(latex_api.latex_service, "compile_pdf", lambda _: b"%PDF-1.5")
+    # Patch the Depends factory so every request in this test gets a mock service.
+    # Patching at the factory level (rather than on a module-level singleton) is
+    # the correct pattern after the thread-safety refactor in api/latex.py.
+    mock_service = LatexService.__new__(LatexService)
+    mock_service.compile_pdf = lambda latex: b"%PDF-1.5"  # type: ignore[method-assign]
 
-    response = client.post("/latex/pdf", json={"latex": "resume source", "filename": "Prathamesh Resume.tex"})
+    app.dependency_overrides[get_latex_service] = lambda: mock_service
+    try:
+        response = client.post(
+            "/latex/pdf",
+            json={"latex": "resume source", "filename": "Prathamesh Resume.tex"},
+        )
+    finally:
+        app.dependency_overrides.pop(get_latex_service, None)
 
     assert response.status_code == 200
     assert response.content == b"%PDF-1.5"

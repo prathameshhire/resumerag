@@ -1,6 +1,6 @@
 from functools import lru_cache
 
-from pydantic import Field
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -9,7 +9,10 @@ class Settings(BaseSettings):
     frontend_port: int = 3000
     backend_port: int = 8000
 
-    database_url: str = "postgresql+psycopg://resumerag:resumerag@db:5432/resumerag"
+    # Required — no default so a missing DATABASE_URL raises ValidationError at
+    # startup instead of silently connecting to a stale hardcoded host.
+    # Must use the psycopg3 driver scheme: postgresql+psycopg://...
+    database_url: str
 
     embedding_model: str = "sentence-transformers/all-MiniLM-L6-v2"
     embedding_dim: int = 384
@@ -26,6 +29,19 @@ class Settings(BaseSettings):
     upload_dir: str = Field(default="/app/uploads")
 
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+
+    @field_validator("database_url")
+    @classmethod
+    def require_psycopg3_scheme(cls, v: str) -> str:
+        # Reject the bare postgresql:// scheme so driver-mismatch errors surface
+        # immediately at startup rather than as cryptic connection failures later.
+        if v.startswith("postgresql://") and not v.startswith("postgresql+"):
+            raise ValueError(
+                "DATABASE_URL must use the psycopg3 driver scheme: "
+                "postgresql+psycopg://user:pass@host/db  "
+                "(not the bare postgresql:// scheme)"
+            )
+        return v
 
 
 @lru_cache

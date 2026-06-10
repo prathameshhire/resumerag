@@ -48,6 +48,8 @@ class RetrievalService:
             where_clauses.append("documents.category = :category")
             params["category"] = active_filters.category
 
+        # ORDER BY uses the <=> (cosine distance) operator.  Performance depends on
+        # idx_chunks_embedding (HNSW) defined in migration 202606100002.
         sql = text(
             f"""
             SELECT

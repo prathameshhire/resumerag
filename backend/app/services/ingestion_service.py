@@ -80,7 +80,12 @@ class IngestionService:
                 markdown_text=markdown_text,
             )
             self.db.add(document)
-            self.db.flush()
+            # No explicit flush needed: Document.id uses default=uuid.uuid4 so the
+            # UUID is available in Python immediately, without a round-trip to the DB.
+            # SQLAlchemy's commit() flushes parent rows before child rows automatically,
+            # respecting the FK constraint.  A single commit() at the end keeps the
+            # document row and all its chunks in the same transaction — either both
+            # land or neither does.
 
             for index, chunk in enumerate(chunks):
                 self.db.add(

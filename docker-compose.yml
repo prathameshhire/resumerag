@@ -39,6 +39,8 @@ services:
       OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-120}
       MAX_UPLOAD_MB: ${MAX_UPLOAD_MB:-20}
       UPLOAD_DIR: ${UPLOAD_DIR:-/app/uploads}
+    # Port kept open for direct API access and alembic commands during development.
+    # In production, remove this and route all traffic through the proxy service.
     ports:
       - "${BACKEND_PORT:-8000}:8000"
     volumes:
@@ -59,19 +61,26 @@ services:
   frontend:
     build:
       context: ./frontend
-    environment:
-      VITE_API_BASE_URL: ${VITE_API_BASE_URL:-http://localhost:8000}
-    ports:
-      - "${FRONTEND_PORT:-3000}:3000"
-    volumes:
-      - ./frontend/index.html:/app/index.html
-      - ./frontend/src:/app/src
-      - ./frontend/postcss.config.js:/app/postcss.config.js
-      - ./frontend/tailwind.config.ts:/app/tailwind.config.ts
-      - ./frontend/vite.config.ts:/app/vite.config.ts
+      args:
+        # VITE_* variables are baked into the JS bundle at build time.
+        # /api resolves to the reverse proxy's backend upstream, so the React
+        # app never needs to know the backend's host or port.
+        # Override with VITE_API_BASE_URL=http://localhost:8000 when running
+        # the frontend locally outside Docker (npm run dev).
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api}
+    # No ports exposed directly — access the app via the proxy on port 80.
     depends_on:
       - backend
-    command: npm run dev -- --host 0.0.0.0
+
+  proxy:
+    image: nginx:alpine
+    ports:
+      - "${PROXY_PORT:-80}:80"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - frontend
+      - backend
 
 volumes:
   postgres_data:

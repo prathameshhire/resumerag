@@ -2,9 +2,12 @@ services:
   db:
     image: pgvector/pgvector:pg16
     environment:
-      POSTGRES_USER: ${POSTGRES_USER:-resumerag}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-resumerag}
-      POSTGRES_DB: ${POSTGRES_DB:-resumerag}
+      # No fallback defaults — credentials must be set in .env (cp .env.example .env).
+      # Omitting them causes docker compose to fail immediately with a clear error
+      # rather than silently using a well-known default password.
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -22,7 +25,9 @@ services:
       APP_ENV: ${APP_ENV:-development}
       FRONTEND_PORT: ${FRONTEND_PORT:-3000}
       BACKEND_PORT: ${BACKEND_PORT:-8000}
-      DATABASE_URL: ${DATABASE_URL:-postgresql+psycopg://resumerag:resumerag@db:5432/resumerag}
+      # No fallback — DATABASE_URL must be set in .env.  The backend refuses to
+      # start (ValidationError) if this variable is missing, which is intentional.
+      DATABASE_URL: ${DATABASE_URL}
       EMBEDDING_MODEL: ${EMBEDDING_MODEL:-sentence-transformers/all-MiniLM-L6-v2}
       EMBEDDING_DIM: ${EMBEDDING_DIM:-384}
       CHUNK_SIZE_CHARS: ${CHUNK_SIZE_CHARS:-2200}

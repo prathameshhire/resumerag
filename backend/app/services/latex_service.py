@@ -14,6 +14,14 @@ class LatexExportError(Exception):
 
 
 class LatexService:
+    """Compile LaTeX source to PDF using a local pdflatex installation.
+
+    Thread-safe: every compile_pdf() call creates its own temporary directory
+    and subprocess.  The only instance state is compiler name and timeout, both
+    of which are read-only after __init__.  Safe to instantiate per-request
+    (the FastAPI Depends factory in api/latex.py) or to share as a singleton.
+    """
+
     def __init__(self, compiler: str = "pdflatex", timeout_seconds: int = 45) -> None:
         self.compiler = compiler
         self.timeout_seconds = timeout_seconds

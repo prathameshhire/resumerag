@@ -20,6 +20,10 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        # Proxy entry-point (port 80 is the default, omitted in the Origin header)
+        "http://localhost",
+        "http://127.0.0.1",
+        # Direct Vite dev-server access (local development outside Docker)
         "http://localhost:3000",
         "http://127.0.0.1:3000",
         f"http://localhost:{settings.frontend_port}",

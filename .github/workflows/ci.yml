@@ -1,0 +1,122 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+# Least-privilege: CI only needs to read the source tree.
+permissions:
+  contents: read
+
+# Cancel stale in-progress runs for the same branch/PR on new commits.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Job 1: Backend unit tests ───────────────────────────────────────────────
+  # Runs the full pytest suite without a real database.
+  # conftest.py injects DATABASE_URL before any app.* import so Pydantic's
+  # startup validator is satisfied; _FakeDB intercepts all actual DB calls.
+  backend-tests:
+    name: Backend tests (pytest)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # Cache the pip download cache keyed on requirements.txt.
+      # Critical: torch==2.5.1+cpu is ~800 MB. Without this cache every run
+      # takes 15-20 minutes to install dependencies.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: pip-${{ hashFiles('backend/requirements.txt') }}
+          restore-keys: pip-
+
+      # Intentionally no --no-cache-dir so pip writes to the cache above.
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Run pytest
+        run: pytest --tb=short -q
+        env:
+          DATABASE_URL: "postgresql+psycopg://resumerag:resumerag@localhost:5432/resumerag"
+
+  # ── Job 2: Frontend type check + production build ──────────────────────────
+  # npm run test  → tsc -b --pretty false  (TypeScript type check)
+  # npm run build → tsc -b && vite build   (full production bundle)
+  # Running both catches type errors AND bundling/import errors independently.
+  frontend-check:
+    name: Frontend check (tsc + vite build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      # Cache the npm global package store keyed on package-lock.json.
+      # npm ci reads from ~/.npm instead of the registry on a cache hit,
+      # dropping install time from ~60s to ~5s.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: npm-${{ hashFiles('frontend/package-lock.json') }}
+          restore-keys: npm-
+
+      # npm ci (not npm install): clean install from lockfile, fails if
+      # package.json and package-lock.json are out of sync.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type check
+        run: npm run test
+
+      - name: Production build
+        run: npm run build
+
+  # ── Job 3: Docker build verification ──────────────────────────────────────
+  # Verifies both multi-stage Dockerfiles build end-to-end. Images are built
+  # but never pushed (push: false) — this is a correctness check only.
+  # Actual image publishing is handled by cd.yml on push to main.
+  docker-build:
+    name: Docker build check (backend + frontend)
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build backend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./backend
+          push: false
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Build frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: false
+          build-args: VITE_API_BASE_URL=/api
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

@@ -14,6 +14,7 @@ needed as an additional dependency.
 """
 
 import asyncio
+import uuid
 from pathlib import Path
 from typing import Any
 from unittest.mock import MagicMock
@@ -49,7 +50,10 @@ class _FakeSession:
         self.rolled_back = True
 
     def refresh(self, obj: Any) -> None:
-        pass
+        # Simulate SQLAlchemy applying the column default (default=uuid.uuid4)
+        # that a real session would have applied during flush/commit.
+        if getattr(obj, "id", None) is None:
+            obj.id = uuid.uuid4()
 
 
 class _FakeUpload:
